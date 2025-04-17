@@ -188,7 +188,7 @@ export default function HomePage() {
             placeholder="Search Pokémon by name"
             value={search}
             onChange={handleSearch}
-            className="w-full p-2 mb-4 border border-gray-300 rounded text-black"
+            className="w-full p-2 mb-4 border border-gray-300 rounded text-emerald-500"
         />
 
         <div className="flex flex-wrap gap-2 mb-4 justify-center pl-20 pr-20">
