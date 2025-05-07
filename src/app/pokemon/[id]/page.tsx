@@ -330,7 +330,18 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="moves" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Attacken</h2>
                 <ul className="space-y-4">
-                    {pokemon.moves.slice(0, 10).map((move:any) => (
+                    {pokemon.moves.slice(0, 10).map((move: {
+                        move: {
+                            name: string;
+                            type: string;
+                            power: number | string;
+                            accuracy: number | string;
+                            pp: number;
+                            priority: number;
+                            damageClass: string;
+                            effect: string;
+                        };
+                    }) => (
                         <li key={move.move.name} className="p-4 rounded shadow-md" style={{ backgroundColor: typeColors[move.move.type] }}>
                             <p><strong>Name:</strong> {move.move.name}</p>
                             <p><strong>Typ:</strong> <span style={{ backgroundColor: typeColors[move.move.type], color: 'white', padding: '2px 6px', borderRadius: '4px', textShadow: '0px 0px 2px black' }}>{move.move.type}</span></p>
