@@ -1,18 +1,9 @@
 // app/pokemon/[id]/components/EvolutionSection.tsx
 import Image from "next/image";
 import Link from "next/link";
+import type { EvolutionStage } from "../types"; // ODER "../../types"
 
-interface EvolutionStage {
-    id: number;
-    name: string;
-    sprite: string;
-    evolvesTo: {
-        id: number;
-        name: string;
-        sprite: string;
-        condition: string;
-    }[];
-}
+
 
 export default function EvolutionSection({ chain }: { chain: EvolutionStage[] }) {
     return (
