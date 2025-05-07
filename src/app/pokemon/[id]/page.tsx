@@ -10,6 +10,7 @@ import EvolutionSection from "./components/EvolutionSection";
 import Image from "next/image";
 
 export default async function Page({ params }: { params: { id: string } }) {
+
     const pokemon = await getPokemonDetails(params.id);
 
     return (

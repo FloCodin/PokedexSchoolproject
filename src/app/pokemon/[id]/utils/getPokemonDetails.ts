@@ -1,6 +1,8 @@
 // app/pokemon/[id]/utils/getPokemonDetails.ts
 import { NamedAPIResource, Pokemon, EvolutionStage } from "../types";
 
+
+
 interface EvolutionChainLink {
     species: NamedAPIResource;
     evolves_to: EvolutionChainLink[];
