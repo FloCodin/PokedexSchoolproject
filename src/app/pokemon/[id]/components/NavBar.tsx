@@ -37,7 +37,7 @@ export default function NavBar() {
                             <Link
                                 href={section.href}
                                 onClick={() => setOpen(false)}
-                                className="flex items-center gap-2 px-4 py-2 text-white font-medium hover:bg-blue-600/70 rounded-md"
+                                className="flex items-center gap-2 pb-4 px-4 py-2 text-white font-medium hover:bg-blue-600/70 rounded-md"
                             >
                                 {section.icon}
                                 <span>{section.label}</span>
