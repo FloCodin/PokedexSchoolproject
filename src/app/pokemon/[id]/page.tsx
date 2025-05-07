@@ -265,9 +265,12 @@ async function getPokemonDetails(id: string) {
     };
 }
 
+interface PageParams {
+    params: { id: string };
+}
 
-export default async function PokemonDetailsPage({params,}: { params: { id: string };
-}) {
+
+export default async function PokemonDetailsPage({ params }: PageParams) {
     const pokemon = await getPokemonDetails(params.id);
 
     return (
