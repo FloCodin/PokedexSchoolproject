@@ -1,4 +1,3 @@
-// app/pokemon/[id]/page.tsx
 import { use } from 'react';
 import Image from "next/image";
 import Link from "next/link";
@@ -63,6 +62,17 @@ interface EvolutionStage {
     }[];
 }
 
+interface MoveDetail {
+    name: string;
+    type: string;
+    power: number | string;
+    accuracy: number | string;
+    pp: number;
+    priority: number;
+    damageClass: string;
+    effect: string;
+}
+
 const typeColors: Record<string, string> = {
     fire: '#F08030',
     water: '#6890F0',
@@ -84,7 +94,7 @@ const typeColors: Record<string, string> = {
     steel: '#B8B8D0',
 };
 
-async function getPokemonDetails(id: string): Promise<any> {
+async function getPokemonDetails(id: string) {
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     if (!res.ok) throw new Error(`Fehler beim Abrufen des Pokémon mit der ID: ${id}`);
     const pokemonData: Pokemon = await res.json();
@@ -216,7 +226,7 @@ async function getPokemonDetails(id: string): Promise<any> {
                 priority,
                 damageClass,
                 effect,
-            }
+            } as MoveDetail,
         };
     }));
 
