@@ -1,6 +1,22 @@
 // app/pokemon/[id]/utils/getPokemonDetails.ts
 import { NamedAPIResource, Pokemon, EvolutionStage } from "../types";
 
+interface EvolutionChainLink {
+    species: NamedAPIResource;
+    evolves_to: EvolutionChainLink[];
+    evolution_details: EvolutionDetail[];
+}
+
+interface EvolutionDetail {
+    min_level?: number;
+    item?: NamedAPIResource;
+    trigger: { name: string };
+    time_of_day?: string;
+    known_move_type?: NamedAPIResource;
+    location?: NamedAPIResource;
+    min_happiness?: number;
+}
+
 export async function getPokemonDetails(id: string): Promise<Pokemon> {
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     if (!res.ok) throw new Error(`Fehler beim Abrufen des Pokémon mit der ID: ${id}`);
@@ -13,9 +29,9 @@ export async function getPokemonDetails(id: string): Promise<Pokemon> {
     const evolutionChainRes = await fetch(speciesData.evolution_chain.url);
     const evolutionChainData = await evolutionChainRes.json();
 
-    const parseEvolutionChain = async (chain: any): Promise<EvolutionStage[]> => {
+    const parseEvolutionChain = async (chain: EvolutionChainLink): Promise<EvolutionStage[]> => {
         const evolutionDetails: EvolutionStage[] = [];
-        let currentChain = chain;
+        let currentChain: EvolutionChainLink | undefined = chain;
 
         while (currentChain) {
             const speciesUrl = currentChain.species.url.replace('pokemon-species', 'pokemon');
@@ -26,7 +42,7 @@ export async function getPokemonDetails(id: string): Promise<Pokemon> {
             const speciesData = await speciesRes.json();
             const germanEvolutionName = speciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || currentChain.species.name;
 
-            const evolvesTo = await Promise.all(currentChain.evolves_to.map(async (evo: { species: NamedAPIResource; evolution_details: any[] }) => {
+            const evolvesTo = await Promise.all(currentChain.evolves_to.map(async (evo: EvolutionChainLink) => {
                 const evoSpeciesRes = await fetch(evo.species.url);
                 const evoSpeciesData = await evoSpeciesRes.json();
                 const evoGermanName = evoSpeciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || evo.species.name;
