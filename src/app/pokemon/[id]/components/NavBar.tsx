@@ -1,0 +1,35 @@
+'use client';
+
+import Link from "next/link";
+import { Home, BarChart2, Zap, Key, Activity, Ruler, RefreshCcw } from "lucide-react"; // Icons
+
+export default function NavBar() {
+    const sections = [
+        { href: "/", label: "Start", icon: <Home size={18} /> },
+        { href: "#stats", label: "Stats", icon: <BarChart2 size={18} /> },
+        { href: "#abilities", label: "Fähigkeiten", icon: <Key size={18} /> },
+        { href: "#moves", label: "Attacken", icon: <Zap size={18} /> },
+        { href: "#types", label: "Typen", icon: <Activity size={18} /> },
+        { href: "#size", label: "Größe", icon: <Ruler size={18} /> },
+        { href: "#forms", label: "Formen", icon: <RefreshCcw size={18} /> },
+        { href: "#evolution", label: "Entwicklung", icon: <RefreshCcw size={18} /> },
+    ];
+
+    return (
+        <nav className="sticky top-0 z-50 mb-6 w-full  bg-gradient-to-r from-gray-900 via-emerald-800 to-gray-900 shadow-lg rounded-b-xl">
+            <ul className="flex justify-center gap-4 p-3">
+                {sections.map((section, idx) => (
+                    <li key={idx}>
+                        <Link
+                            href={section.href}
+                            className="flex items-center gap-1 px-4 py-2 text-white text-sm md:text-base font-medium transition-all duration-200 rounded-md hover:bg-blue-600/70 hover:shadow-md"
+                        >
+                            {section.icon}
+                            <span>{section.label}</span>
+                        </Link>
+                    </li>
+                ))}
+            </ul>
+        </nav>
+    );
+}
