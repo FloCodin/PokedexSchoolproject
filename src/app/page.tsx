@@ -62,7 +62,7 @@ export default function HomePage() {
   const [filteredPokemons, setFilteredPokemons] = useState<Pokemon[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchPokemon = async (offset = 0, limit = 100) => {
+  const fetchPokemon = async (offset = 0, limit = 250) => {
     try {
       setLoading(true);
       let fetchedPokemons: PokemonListEntry[] = [];
@@ -157,15 +157,15 @@ export default function HomePage() {
     setSelectedTypes([]);
     setOffset(0);
     setHasMore(true);
-    fetchPokemon(0, 100);
+    fetchPokemon(0, 250);
   };
 
   const loadMorePokemon = () => {
     if (hasMore && !isLoadingMore) {
-      const newOffset = offset + 100;
+      const newOffset = offset + 250;
       setOffset(newOffset);
       setIsLoadingMore(true);
-      fetchPokemon(newOffset, 100);
+      fetchPokemon(newOffset, 250);
     }
   };
 
