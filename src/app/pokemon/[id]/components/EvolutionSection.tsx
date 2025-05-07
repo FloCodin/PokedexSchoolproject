@@ -3,9 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface EvolutionStage {
+    id: number;
     name: string;
     sprite: string;
     evolvesTo: {
+        id: number;
         name: string;
         sprite: string;
         condition: string;
@@ -20,7 +22,7 @@ export default function EvolutionSection({ chain }: { chain: EvolutionStage[] })
                 {chain.map((evolution, index) => (
                     <li key={index} className="mb-4">
                         <div className="flex items-center">
-                            <Link href={`/pokemon/${evolution.name}`} className="text-blue-600 hover:underline capitalize">
+                            <Link href={`/pokemon/${evolution.id}`} className="text-blue-600 hover:underline capitalize">
                                 {evolution.name}
                             </Link>
                             {evolution.sprite && (
@@ -32,7 +34,7 @@ export default function EvolutionSection({ chain }: { chain: EvolutionStage[] })
                                 <p className="text-gray-600">Weiterentwicklung:</p>
                                 {evolution.evolvesTo.map((nextEvo, i) => (
                                     <div key={i} className="flex items-center">
-                                        <Link href={`/pokemon/${nextEvo.name}`} className="text-blue-600 hover:underline capitalize">
+                                        <Link href={`/pokemon/${nextEvo.id}`} className="text-blue-600 hover:underline capitalize">
                                             {nextEvo.name}
                                         </Link>
                                         {nextEvo.sprite && (

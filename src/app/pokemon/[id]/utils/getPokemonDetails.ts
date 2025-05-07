@@ -1,8 +1,6 @@
 // app/pokemon/[id]/utils/getPokemonDetails.ts
 import { NamedAPIResource, Pokemon, EvolutionStage } from "../types";
 
-
-
 interface EvolutionChainLink {
     species: NamedAPIResource;
     evolves_to: EvolutionChainLink[];
@@ -17,6 +15,11 @@ interface EvolutionDetail {
     known_move_type?: NamedAPIResource;
     location?: NamedAPIResource;
     min_happiness?: number;
+}
+
+function extractIdFromSpeciesUrl(url: string): number {
+    const match = url.match(/\/pokemon-species\/(\d+)\//);
+    return match ? parseInt(match[1], 10) : 0;
 }
 
 export async function getPokemonDetails(id: string): Promise<Pokemon> {
@@ -83,6 +86,7 @@ export async function getPokemonDetails(id: string): Promise<Pokemon> {
                 }
 
                 return {
+                    id: extractIdFromSpeciesUrl(evo.species.url),
                     name: evoGermanName,
                     sprite: evoPokemonData.sprites.front_default,
                     condition,
@@ -90,6 +94,7 @@ export async function getPokemonDetails(id: string): Promise<Pokemon> {
             }));
 
             evolutionDetails.push({
+                id: extractIdFromSpeciesUrl(currentChain.species.url),
                 name: germanEvolutionName,
                 sprite: data.sprites.front_default,
                 evolvesTo,
@@ -122,7 +127,7 @@ export async function getPokemonDetails(id: string): Promise<Pokemon> {
         const priority = moveData.priority ?? 0;
         const damageClass = moveData.damage_class.name;
         const effect = moveData.effect_entries.find((e: { language: NamedAPIResource }) => e.language.name === 'de')?.short_effect ||
-            moveData.effect_entries.find((e: { language: NamedAPIResource }) => e.language.name === 'en')?.short_effect ||
+            moveData.effect_entries.find((e: { language: NamedAPIResource }) => e.language.name === 'de')?.short_effect ||
             'Kein Effekt verfügbar';
 
         return {

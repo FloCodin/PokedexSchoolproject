@@ -50,6 +50,7 @@ export interface Pokemon {
 
 export interface EvolutionStage {
     name: string;
+    id: number;
     sprite: string;
     evolvesTo: {
         name: string;
