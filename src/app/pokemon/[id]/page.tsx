@@ -91,6 +91,11 @@ interface MoveData {
     damage_class: NamedAPIResource;
     effect_entries: MoveEffectEntry[];
 }
+interface PageProps {
+    params: {
+        id: string;
+    };
+}
 
 const typeColors: Record<string, string> = {
     fire: '#F08030',
@@ -265,7 +270,7 @@ async function getPokemonDetails(id: string) {
 }
 
 
-export default async function PokemonDetailsPage({ params }: { params: { id: string } }) {
+export default async function PokemonDetailsPage({ params }: PageProps) {
     const pokemon = await getPokemonDetails(params.id);
 
 
