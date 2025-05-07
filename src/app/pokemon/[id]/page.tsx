@@ -8,6 +8,7 @@ import SizeSection from "./components/SizeSection";
 import FormsSection from "./components/FormsSection";
 import EvolutionSection from "./components/EvolutionSection";
 import Image from "next/image";
+import NavBar from "./components/NavBar";
 
 // Wichtig: 'params' ist ab Next.js 15 ein Promise!
 export default async function Page({
@@ -21,6 +22,7 @@ export default async function Page({
 
     return (
         <main className="p-6 max-w-3xl mx-auto">
+            <NavBar />
             <h1 className="text-3xl font-bold mb-4 capitalize text-center">
                 {pokemon.name}
             </h1>
