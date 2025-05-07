@@ -9,19 +9,35 @@ import FormsSection from "./components/FormsSection";
 import EvolutionSection from "./components/EvolutionSection";
 import Image from "next/image";
 
-export default async function Page({ params }: { params: { id: string } }) {
+// Wichtig: 'params' ist ab Next.js 15 ein Promise!
+export default async function Page({
+                                       params,
+                                   }: {
+    params: Promise<{ id: string }>;
+}) {
+    const { id } = await params;
 
-    const pokemon = await getPokemonDetails(params.id);
+    const pokemon = await getPokemonDetails(id);
 
     return (
         <main className="p-6 max-w-3xl mx-auto">
-            <h1 className="text-3xl font-bold mb-4 capitalize text-center">{pokemon.name}</h1>
+            <h1 className="text-3xl font-bold mb-4 capitalize text-center">
+                {pokemon.name}
+            </h1>
             <div className="flex justify-center mb-4">
-                <Image src={pokemon.sprites.front_default} alt={`Normales ${pokemon.name}`} width={250} height={250} />
+                <Image
+                    src={pokemon.sprites.front_default}
+                    alt={`Normales ${pokemon.name}`}
+                    width={250}
+                    height={250}
+                />
             </div>
 
             <SizeSection pokemon={pokemon} />
-            <StatsSection stats={pokemon.stats} baseStatTotal={pokemon.baseStatTotal} />
+            <StatsSection
+                stats={pokemon.stats}
+                baseStatTotal={pokemon.baseStatTotal}
+            />
             <AbilitiesSection abilities={pokemon.abilities} />
             <MovesSection moves={pokemon.moves} />
             <TypesSection types={pokemon.types} />
