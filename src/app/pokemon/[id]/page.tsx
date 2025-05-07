@@ -91,11 +91,7 @@ interface MoveData {
     damage_class: NamedAPIResource;
     effect_entries: MoveEffectEntry[];
 }
-interface PageProps {
-    params: {
-        id: string;
-    };
-}
+
 
 const typeColors: Record<string, string> = {
     fire: '#F08030',
