@@ -1,11 +1,28 @@
-// app/pokemon/error.js
-'use client'; // Fehlerkomponenten müssen Client Components sein
+// app/pokemon/error.tsx
+'use client';
 
-export default function Error({ error, reset }) {
+import { useEffect } from 'react';
+
+interface ErrorProps {
+    error: Error;
+    reset: () => void;
+}
+
+export default function Error({ error, reset }: ErrorProps) {
+    useEffect(() => {
+        console.error(error);
+    }, [error]);
+
     return (
-        <div>
-            <p>Error: {error.message}</p>
-            <button onClick={() => reset()}>Try again</button>
+        <div className="p-6 text-center text-red-600">
+            <h2 className="text-xl font-bold mb-4">Ein Fehler ist aufgetreten!</h2>
+            <p className="mb-4">{error.message}</p>
+            <button
+                onClick={() => reset()}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+            >
+                Erneut versuchen
+            </button>
         </div>
     );
 }
