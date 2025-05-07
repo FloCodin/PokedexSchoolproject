@@ -56,5 +56,6 @@ export interface EvolutionStage {
         name: string;
         sprite: string;
         condition: string;
+        id:number;
     }[];
 }
