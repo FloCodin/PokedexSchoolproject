@@ -3,8 +3,67 @@ import { use } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 
-// Farben für Pokémon-Typen
-const typeColors = {
+// Typdefinitionen
+interface NamedAPIResource {
+    name: string;
+    url: string;
+}
+
+interface PokemonAbility {
+    is_hidden: boolean;
+    slot: number;
+    ability: NamedAPIResource;
+}
+
+interface PokemonMove {
+    move: NamedAPIResource;
+}
+
+interface PokemonStat {
+    base_stat: number;
+    effort: number;
+    stat: NamedAPIResource;
+}
+
+interface PokemonType {
+    slot: number;
+    type: NamedAPIResource;
+}
+
+interface Pokemon {
+    name: string;
+    height: number;
+    weight: number;
+    abilities: PokemonAbility[];
+    moves: PokemonMove[];
+    stats: PokemonStat[];
+    types: PokemonType[];
+    sprites: {
+        front_default: string;
+        front_shiny: string;
+    };
+    species: NamedAPIResource;
+    forms: NamedAPIResource[];
+}
+
+interface PokemonSpecies {
+    name: string;
+    capture_rate: number;
+    evolution_chain: { url: string };
+    names: { name: string; language: NamedAPIResource }[];
+}
+
+interface EvolutionStage {
+    name: string;
+    sprite: string;
+    evolvesTo: {
+        name: string;
+        sprite: string;
+        condition: string;
+    }[];
+}
+
+const typeColors: Record<string, string> = {
     fire: '#F08030',
     water: '#6890F0',
     grass: '#78C850',
@@ -24,22 +83,23 @@ const typeColors = {
     ghost: '#705898',
     steel: '#B8B8D0',
 };
-async function getPokemonDetails(id: string) {
+
+async function getPokemonDetails(id: string): Promise<any> {
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
     if (!res.ok) throw new Error(`Fehler beim Abrufen des Pokémon mit der ID: ${id}`);
-    const pokemonData = await res.json();
+    const pokemonData: Pokemon = await res.json();
 
     const speciesRes = await fetch(pokemonData.species.url);
     if (!speciesRes.ok) throw new Error(`Fehler beim Abrufen der Speziesdetails für das Pokémon mit der ID: ${id}`);
-    const speciesData = await speciesRes.json();
+    const speciesData: PokemonSpecies = await speciesRes.json();
 
-    const germanName = speciesData.names.find((name: any) => name.language.name === 'de')?.name || pokemonData.name;
+    const germanName = speciesData.names.find((name) => name.language.name === 'de')?.name || pokemonData.name;
 
-    const formsData = await Promise.all(pokemonData.forms.map(async (form: any) => {
+    const formsData = await Promise.all(pokemonData.forms.map(async (form) => {
         const formRes = await fetch(form.url);
         if (!formRes.ok) throw new Error(`Fehler beim Abrufen der Formdetails für ${form.name}`);
         const formData = await formRes.json();
-        const germanFormName = formData.names.find((name: any) => name.language.name === 'de')?.name || formData.name;
+        const germanFormName = formData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || formData.name;
         return { ...formData, name: germanFormName };
     }));
 
@@ -47,8 +107,8 @@ async function getPokemonDetails(id: string) {
     if (!evolutionChainRes.ok) throw new Error(`Fehler beim Abrufen der Evolutionskette`);
     const evolutionChainData = await evolutionChainRes.json();
 
-    const parseEvolutionChain = async (chain: any): Promise<any[]> => {
-        const evolutionDetails = [];
+    const parseEvolutionChain = async (chain: any): Promise<EvolutionStage[]> => {
+        const evolutionDetails: EvolutionStage[] = [];
         let currentChain = chain;
 
         do {
@@ -58,55 +118,57 @@ async function getPokemonDetails(id: string) {
 
             const speciesRes = await fetch(currentChain.species.url);
             const speciesData = await speciesRes.json();
-            const germanEvolutionName = speciesData.names.find((name: any) => name.language.name === 'de')?.name || currentChain.species.name;
+            const germanEvolutionName = speciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || currentChain.species.name;
+
+            const evolvesTo = await Promise.all(currentChain.evolves_to.map(async (evo: any) => {
+                const evoSpeciesRes = await fetch(evo.species.url);
+                const evoSpeciesData = await evoSpeciesRes.json();
+                const evoGermanName = evoSpeciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || evo.species.name;
+
+                const evoPokemonRes = await fetch(evo.species.url.replace('pokemon-species', 'pokemon'));
+                const evoPokemonData = await evoPokemonRes.json();
+
+                const evolutionDetails = evo.evolution_details[0];
+                let condition = 'Unbekannte Bedingung';
+
+                if (evolutionDetails) {
+                    if (evolutionDetails.min_level) {
+                        condition = `Level ${evolutionDetails.min_level}`;
+                    } else if (evolutionDetails.item) {
+                        const itemRes = await fetch(evolutionDetails.item.url);
+                        const itemData = await itemRes.json();
+                        const germanItemName = itemData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || itemData.name;
+                        condition = `mit ${germanItemName}`;
+                    } else if (evolutionDetails.trigger.name === 'trade') {
+                        condition = 'Tausch';
+                    } else if (evolutionDetails.trigger.name === 'level-up') {
+                        if (evolutionDetails.time_of_day) {
+                            condition = `Level-Up am ${evolutionDetails.time_of_day === 'day' ? 'Tag' : 'Nacht'}`;
+                        } else if (evolutionDetails.known_move_type) {
+                            const moveTypeRes = await fetch(evolutionDetails.known_move_type.url);
+                            const moveTypeData = await moveTypeRes.json();
+                            condition = `Level-Up mit bekanntem ${moveTypeData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || moveTypeData.name} Attacke`;
+                        } else if (evolutionDetails.location) {
+                            const locationRes = await fetch(evolutionDetails.location.url);
+                            const locationData = await locationRes.json();
+                            condition = `Level-Up an ${locationData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || locationData.name}`;
+                        } else if (evolutionDetails.min_happiness) {
+                            condition = 'mit hoher Freundschaft';
+                        }
+                    }
+                }
+
+                return {
+                    name: evoGermanName,
+                    sprite: evoPokemonData.sprites.front_default,
+                    condition,
+                };
+            }));
 
             evolutionDetails.push({
                 name: germanEvolutionName,
                 sprite: data.sprites.front_default,
-                evolvesTo: await Promise.all(currentChain.evolves_to.map(async (evo: any) => {
-                    const evoSpeciesRes = await fetch(evo.species.url);
-                    const evoSpeciesData = await evoSpeciesRes.json();
-                    const evoGermanName = evoSpeciesData.names.find((name: any) => name.language.name === 'de')?.name || evo.species.name;
-
-                    const evoPokemonRes = await fetch(evo.species.url.replace('pokemon-species', 'pokemon'));
-                    const evoPokemonData = await evoPokemonRes.json();
-
-                    const evolutionDetails = evo.evolution_details[0];
-                    let condition = 'Unbekannte Bedingung';
-
-                    if (evolutionDetails) {
-                        if (evolutionDetails.min_level) {
-                            condition = `Level ${evolutionDetails.min_level}`;
-                        } else if (evolutionDetails.item) {
-                            const itemRes = await fetch(evolutionDetails.item.url);
-                            const itemData = await itemRes.json();
-                            const germanItemName = itemData.names.find((name: any) => name.language.name === 'de')?.name || itemData.name;
-                            condition = `mit ${germanItemName}`;
-                        } else if (evolutionDetails.trigger.name === 'trade') {
-                            condition = 'Tausch';
-                        } else if (evolutionDetails.trigger.name === 'level-up') {
-                            if (evolutionDetails.time_of_day) {
-                                condition = `Level-Up am ${evolutionDetails.time_of_day === 'day' ? 'Tag' : 'Nacht'}`;
-                            } else if (evolutionDetails.known_move_type) {
-                                const moveTypeRes = await fetch(evolutionDetails.known_move_type.url);
-                                const moveTypeData = await moveTypeRes.json();
-                                condition = `Level-Up mit bekanntem ${moveTypeData.names.find((name: any) => name.language.name === 'de')?.name || moveTypeData.name} Attacke`;
-                            } else if (evolutionDetails.location) {
-                                const locationRes = await fetch(evolutionDetails.location.url);
-                                const locationData = await locationRes.json();
-                                condition = `Level-Up an ${locationData.names.find((name: any) => name.language.name === 'de')?.name || locationData.name}`;
-                            } else if (evolutionDetails.min_happiness) {
-                                condition = 'mit hoher Freundschaft';
-                            }
-                        }
-                    }
-
-                    return {
-                        name: evoGermanName,
-                        sprite: evoPokemonData.sprites.front_default,
-                        condition,
-                    };
-                })),
+                evolvesTo,
             });
 
             currentChain = currentChain.evolves_to[0];
@@ -117,19 +179,19 @@ async function getPokemonDetails(id: string) {
 
     const evolutionChain = await parseEvolutionChain(evolutionChainData.chain);
 
-    const germanAbilities = await Promise.all(pokemonData.abilities.map(async (ability: any) => {
+    const germanAbilities = await Promise.all(pokemonData.abilities.map(async (ability) => {
         const abilityRes = await fetch(ability.ability.url);
         if (!abilityRes.ok) throw new Error(`Fehler beim Abrufen der Fähigkeitsdetails für ${ability.ability.name}`);
         const abilityData = await abilityRes.json();
-        const germanAbilityName = abilityData.names.find((name: any) => name.language.name === 'de')?.name || ability.ability.name;
+        const germanAbilityName = abilityData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || ability.ability.name;
         return { ...ability, ability: { ...ability.ability, name: germanAbilityName } };
     }));
 
-    const germanMoves = await Promise.all(pokemonData.moves.map(async (move: any) => {
+    const germanMoves = await Promise.all(pokemonData.moves.map(async (move) => {
         const moveRes = await fetch(move.move.url);
         if (!moveRes.ok) throw new Error(`Fehler beim Abrufen der Attackendetails für ${move.move.name}`);
         const moveData = await moveRes.json();
-        const germanMoveName = moveData.names.find((name: any) => name.language.name === 'de')?.name || move.move.name;
+        const germanMoveName = moveData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || move.move.name;
 
         const type = moveData.type.name;
         const power = moveData.power || 'N/A';
@@ -138,8 +200,8 @@ async function getPokemonDetails(id: string) {
         const priority = moveData.priority || 0;
         const damageClass = moveData.damage_class.name;
 
-        const effect = moveData.effect_entries.find((entry: any) => entry.language.name === 'de')?.short_effect ||
-            moveData.effect_entries.find((entry: any) => entry.language.name === 'en')?.short_effect ||
+        const effect = moveData.effect_entries.find((entry: { language: NamedAPIResource }) => entry.language.name === 'de')?.short_effect ||
+            moveData.effect_entries.find((entry: { language: NamedAPIResource }) => entry.language.name === 'en')?.short_effect ||
             'Kein Effekt verfügbar';
 
         return {
@@ -158,7 +220,7 @@ async function getPokemonDetails(id: string) {
         };
     }));
 
-    const baseStatTotal = pokemonData.stats.reduce((total: number, stat: any) => total + stat.base_stat, 0);
+    const baseStatTotal = pokemonData.stats.reduce((total, stat) => total + stat.base_stat, 0);
     const captureRate = speciesData.capture_rate;
 
     return {
@@ -172,6 +234,7 @@ async function getPokemonDetails(id: string) {
         evolutionChain,
     };
 }
+
 
 export default function PokemonDetailsPage({ params }: { params: { id: string } }) {
     const pokemon = use(getPokemonDetails(params.id));
@@ -207,7 +270,7 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="stats" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Basiswerte</h2>
                 <ul className="space-y-2">
-                    {pokemon.stats.map(stat => (
+                    {pokemon.stats.map((stat: PokemonStat) => (
                         <li key={stat.stat.name} className="capitalize flex items-center">
                             <span className="w-24">{stat.stat.name}</span>
                             <div className="flex-1 bg-gray-200 rounded-full h-4 ml-4">
@@ -226,7 +289,7 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="abilities" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Fähigkeiten</h2>
                 <ul className="list-disc pl-6">
-                    {pokemon.abilities.map((ability) => (
+                    {pokemon.abilities.map((ability: PokemonAbility) => (
                         <li key={ability.ability.name} className="capitalize">
                             {ability.ability.name}
                         </li>
@@ -237,7 +300,7 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="moves" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Attacken</h2>
                 <ul className="space-y-4">
-                    {pokemon.moves.slice(0, 10).map((move) => (
+                    {pokemon.moves.slice(0, 10).map((move:any) => (
                         <li key={move.move.name} className="p-4 rounded shadow-md" style={{ backgroundColor: typeColors[move.move.type] }}>
                             <p><strong>Name:</strong> {move.move.name}</p>
                             <p><strong>Typ:</strong> <span style={{ backgroundColor: typeColors[move.move.type], color: 'white', padding: '2px 6px', borderRadius: '4px', textShadow: '0px 0px 2px black' }}>{move.move.type}</span></p>
@@ -255,7 +318,7 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="types" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Typen</h2>
                 <div className="flex justify-center gap-2 mb-4">
-                    {pokemon.types.map(type => (
+                    {pokemon.types.map((type: PokemonType) => (
                         <span key={type.type.name} style={{ backgroundColor: typeColors[type.type.name], color: 'white', padding: '6px 10px', borderRadius: '4px', textShadow: '0px 0px 2px black' }}>
                             {type.type.name}
                         </span>
@@ -275,7 +338,7 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
             <section id="evolution" className="mb-8">
                 <h2 className="text-2xl font-semibold text-center mb-4">Entwicklungsreihe</h2>
                 <ul className="list-disc pl-6">
-                    {pokemon.evolutionChain.map((evolution, index) => (
+                    {pokemon.evolutionChain.map((evolution: EvolutionStage, index: number) => (
                         <li key={index} className="mb-4">
                             <div className="flex items-center">
                                 <Link href={`/pokemon/${evolution.name}`} className="text-blue-600 hover:underline capitalize">
@@ -288,7 +351,8 @@ export default function PokemonDetailsPage({ params }: { params: { id: string } 
                             {evolution.evolvesTo.length > 0 && (
                                 <div className="pl-4">
                                     <p className="text-gray-600">Weiterentwicklung:</p>
-                                    {evolution.evolvesTo.map((nextEvo, i) => (
+                                    {evolution.evolvesTo.map((nextEvo: { name: string; sprite: string; condition: string }, i: number) => (
+
                                         <div key={i} className="flex items-center">
                                             <Link href={`/pokemon/${nextEvo.name}`} className="text-blue-600 hover:underline capitalize">
                                                 {nextEvo.name}
