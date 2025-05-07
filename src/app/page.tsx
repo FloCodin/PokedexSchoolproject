@@ -8,6 +8,10 @@ interface PokemonListEntry {
   url: string;
 }
 
+interface PokemonTypeData {
+  pokemon: { pokemon: PokemonListEntry };
+}
+
 interface PokemonType {
   type: {
     name: string;
@@ -72,24 +76,23 @@ export default function HomePage() {
           const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           const data = await res.json();
-          fetchedPokemons = [...fetchedPokemons, ...data.pokemon.map((p: any) => p.pokemon)];
+          fetchedPokemons = [
+            ...fetchedPokemons,
+            ...data.pokemon.map((p: PokemonTypeData) => p.pokemon),
+          ];
         }
 
-        // Entferne Duplikate
         fetchedPokemons = Array.from(new Set(fetchedPokemons.map(p => p.url)))
-            .map(url => fetchedPokemons.find(p => p.url === url)) as PokemonListEntry[];
+            .map(url => fetchedPokemons.find(p => p.url === url)!) as PokemonListEntry[];
 
-        setHasMore(false); // Begrenze "Load More" bei Typ-Suche
+        setHasMore(false);
       } else {
         const res = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         fetchedPokemons = data.results;
 
-        // Wenn weniger als limit zurückkommt, gibt’s nichts mehr
-        if (data.results.length < limit) {
-          setHasMore(false);
-        }
+        if (data.results.length < limit) setHasMore(false);
       }
 
       const detailedPokemon = await Promise.all(fetchedPokemons.map(async (pokemon) => {
@@ -115,9 +118,10 @@ export default function HomePage() {
       }));
 
       setPokemons(prev => offset === 0 ? detailedPokemon : [...prev, ...detailedPokemon]);
-    } catch (error: any) {
-      console.error('Error fetching Pokémon:', error);
-      setError(error);
+    } catch (err) {
+      const typedError = err as Error;
+      console.error('Error fetching Pokémon:', typedError);
+      setError(typedError);
     } finally {
       setLoading(false);
       setIsLoadingMore(false);
@@ -129,7 +133,7 @@ export default function HomePage() {
     setHasMore(true);
     setPokemons([]);
     fetchPokemon(0, 100);
-  }, [selectedTypes]);
+  }, [selectedTypes, fetchPokemon]);
 
   useEffect(() => {
     const filtered = pokemons.filter(p =>
@@ -181,7 +185,7 @@ export default function HomePage() {
             loading="lazy"
         ></iframe>
 
-        <h1 className="text-3xl font-bold mb-4 flex justify-center">Willkommen zu Flo's Pokedex</h1>
+        <h1 className="text-3xl font-bold mb-4 flex justify-center">Willkommen zu Flo&apos;s Pokedex</h1>
 
         <input
             type="text"
@@ -228,7 +232,7 @@ export default function HomePage() {
         ) : (
             <>
               {search && filteredPokemons.length === 0 && (
-                  <p className="text-center text-red-500">Keine Ergebnisse für "{search}"</p>
+                  <p className="text-center text-red-500">Keine Ergebnisse für &quot;{search}&quot;</p>
               )}
               <ul className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
                 {filteredPokemons.map((pokemon) => (
