@@ -12,7 +12,7 @@ const typeColors: Record<string, string> = {
     fire: '#F08030',
     water: '#6890F0',
     grass: '#78C850',
-    electric: '#ffd70c',
+    electric: '#f8d827',
     psychic: '#F85888',
     ice: '#98D8D8',
     dragon: '#7038F8',
