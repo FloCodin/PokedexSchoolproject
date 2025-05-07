@@ -6,7 +6,7 @@ import {
     Home, BarChart2, Zap, Key, Activity, Ruler, RefreshCcw, Menu, X
 } from "lucide-react";
 
-export async function NavBar() {
+export default function NavBar() {
     const [open, setOpen] = useState(false);
 
     const sections = [
