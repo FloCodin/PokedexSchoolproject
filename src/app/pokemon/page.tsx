@@ -6,9 +6,10 @@ export default async function PokemonPage() {
         <div>
             <h1>Pokemon List</h1>
             <ul>
-                {data.results.map((pokemon, index) => (
+                {data.results.map((pokemon: { name: string }, index: number) => (
                     <li key={index}>{pokemon.name}</li>
                 ))}
+
             </ul>
         </div>
     );

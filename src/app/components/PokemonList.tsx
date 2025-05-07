@@ -12,11 +12,9 @@ interface Pokemon {
         front_default: string | null;
     };
 }
-
 interface PokemonListProps {
     pokemons: Pokemon[];
 }
-
 const PokemonList: React.FC<PokemonListProps> = ({ pokemons }) => {
     return (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-6">
