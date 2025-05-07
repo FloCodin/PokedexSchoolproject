@@ -6,7 +6,7 @@ import {
     Home, BarChart2, Zap, Key, Activity, Ruler, RefreshCcw, Menu, X
 } from "lucide-react";
 
-export default function NavBar() {
+export async function NavBar() {
     const [open, setOpen] = useState(false);
 
     const sections = [
@@ -23,7 +23,7 @@ export default function NavBar() {
     return (
         <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-gray-900 via-emerald-500 to-gray-900 shadow-lg rounded-b-xl">
             <div className="flex items-center justify-between px-4 py-3 md:hidden">
-                <span className="text-white font-bold text-lg">Pokedex</span>
+                <span className="text-white font-bold text-lg align-middle justify-center">Pokedex</span>
                 <button onClick={() => setOpen(!open)} className="text-white">
                     {open ? <X size={28} /> : <Menu size={28} />}
                 </button>
