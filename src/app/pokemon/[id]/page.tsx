@@ -270,9 +270,9 @@ async function getPokemonDetails(id: string) {
 }
 
 
-export default async function PokemonDetailsPage({ params }: PageProps) {
+export default async function PokemonDetailsPage({params,}: { params: { id: string };
+}) {
     const pokemon = await getPokemonDetails(params.id);
-
 
     return (
         <main className="p-6 max-w-3xl mx-auto">
