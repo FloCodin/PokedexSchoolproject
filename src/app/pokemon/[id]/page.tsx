@@ -2,7 +2,6 @@ import { use } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 
-// Typdefinitionen
 interface NamedAPIResource {
     name: string;
     url: string;
@@ -62,15 +61,36 @@ interface EvolutionStage {
     }[];
 }
 
-interface MoveDetail {
-    name: string;
-    type: string;
-    power: number | string;
-    accuracy: number | string;
+interface EvolutionChainNode {
+    species: NamedAPIResource;
+    evolves_to: EvolutionChainNode[];
+    evolution_details: EvolutionDetail[];
+}
+
+interface EvolutionDetail {
+    min_level?: number;
+    item?: NamedAPIResource;
+    trigger: NamedAPIResource;
+    time_of_day?: string;
+    known_move_type?: NamedAPIResource;
+    location?: NamedAPIResource;
+    min_happiness?: number;
+}
+
+interface MoveEffectEntry {
+    language: NamedAPIResource;
+    short_effect: string;
+}
+
+interface MoveData {
+    names: { name: string; language: NamedAPIResource }[];
+    type: NamedAPIResource;
+    power: number | null;
+    accuracy: number | null;
     pp: number;
     priority: number;
-    damageClass: string;
-    effect: string;
+    damage_class: NamedAPIResource;
+    effect_entries: MoveEffectEntry[];
 }
 
 const typeColors: Record<string, string> = {
@@ -117,11 +137,11 @@ async function getPokemonDetails(id: string) {
     if (!evolutionChainRes.ok) throw new Error(`Fehler beim Abrufen der Evolutionskette`);
     const evolutionChainData = await evolutionChainRes.json();
 
-    const parseEvolutionChain = async (chain: any): Promise<EvolutionStage[]> => {
+    const parseEvolutionChain = async (chain: EvolutionChainNode): Promise<EvolutionStage[]> => {
         const evolutionDetails: EvolutionStage[] = [];
-        let currentChain = chain;
+        let currentChain: EvolutionChainNode | undefined = chain;
 
-        do {
+        while (currentChain) {
             const speciesUrl = currentChain.species.url.replace('pokemon-species', 'pokemon');
             const res = await fetch(speciesUrl);
             const data = await res.json();
@@ -130,7 +150,7 @@ async function getPokemonDetails(id: string) {
             const speciesData = await speciesRes.json();
             const germanEvolutionName = speciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || currentChain.species.name;
 
-            const evolvesTo = await Promise.all(currentChain.evolves_to.map(async (evo: any) => {
+            const evolvesTo = await Promise.all(currentChain.evolves_to.map(async (evo: EvolutionChainNode) => {
                 const evoSpeciesRes = await fetch(evo.species.url);
                 const evoSpeciesData = await evoSpeciesRes.json();
                 const evoGermanName = evoSpeciesData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || evo.species.name;
@@ -182,7 +202,7 @@ async function getPokemonDetails(id: string) {
             });
 
             currentChain = currentChain.evolves_to[0];
-        } while (currentChain && currentChain.evolves_to.length > 0);
+        }
 
         return evolutionDetails;
     };
@@ -200,8 +220,8 @@ async function getPokemonDetails(id: string) {
     const germanMoves = await Promise.all(pokemonData.moves.map(async (move) => {
         const moveRes = await fetch(move.move.url);
         if (!moveRes.ok) throw new Error(`Fehler beim Abrufen der Attackendetails für ${move.move.name}`);
-        const moveData = await moveRes.json();
-        const germanMoveName = moveData.names.find((name: { language: NamedAPIResource }) => name.language.name === 'de')?.name || move.move.name;
+        const moveData: MoveData = await moveRes.json();
+        const germanMoveName = moveData.names.find((name) => name.language.name === 'de')?.name || move.move.name;
 
         const type = moveData.type.name;
         const power = moveData.power || 'N/A';
@@ -210,8 +230,8 @@ async function getPokemonDetails(id: string) {
         const priority = moveData.priority || 0;
         const damageClass = moveData.damage_class.name;
 
-        const effect = moveData.effect_entries.find((entry: { language: NamedAPIResource }) => entry.language.name === 'de')?.short_effect ||
-            moveData.effect_entries.find((entry: { language: NamedAPIResource }) => entry.language.name === 'en')?.short_effect ||
+        const effect = moveData.effect_entries.find((entry) => entry.language.name === 'de')?.short_effect ||
+            moveData.effect_entries.find((entry) => entry.language.name === 'en')?.short_effect ||
             'Kein Effekt verfügbar';
 
         return {
@@ -226,7 +246,7 @@ async function getPokemonDetails(id: string) {
                 priority,
                 damageClass,
                 effect,
-            } as MoveDetail,
+            },
         };
     }));
 

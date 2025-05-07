@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from "next/image";
 
 interface PokemonListEntry {
@@ -58,7 +59,6 @@ const typeColors: Record<string, string> = {
 export default function HomePage() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -66,7 +66,7 @@ export default function HomePage() {
   const [filteredPokemons, setFilteredPokemons] = useState<Pokemon[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchPokemon = async (offset = 0, limit = 250) => {
+  const fetchPokemon = useCallback(async (offset = 0, limit = 250) => {
     try {
       setLoading(true);
       let fetchedPokemons: PokemonListEntry[] = [];
@@ -119,14 +119,12 @@ export default function HomePage() {
 
       setPokemons(prev => offset === 0 ? detailedPokemon : [...prev, ...detailedPokemon]);
     } catch (err) {
-      const typedError = err as Error;
-      console.error('Error fetching Pokémon:', typedError);
-      setError(typedError);
+      console.error('Error fetching Pokémon:', err);
     } finally {
       setLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [selectedTypes]);
 
   useEffect(() => {
     setOffset(0);
