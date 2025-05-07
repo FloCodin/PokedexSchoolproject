@@ -1,4 +1,3 @@
-import { use } from 'react';
 import Image from "next/image";
 import Link from "next/link";
 
@@ -266,8 +265,9 @@ async function getPokemonDetails(id: string) {
 }
 
 
-export default function PokemonDetailsPage({ params }: { params: { id: string } }) {
-    const pokemon = use(getPokemonDetails(params.id));
+export default async function PokemonDetailsPage({ params }: { params: { id: string } }) {
+    const pokemon = await getPokemonDetails(params.id);
+
 
     return (
         <main className="p-6 max-w-3xl mx-auto">
