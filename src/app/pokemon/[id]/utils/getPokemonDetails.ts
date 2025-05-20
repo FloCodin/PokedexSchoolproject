@@ -24,7 +24,7 @@ function extractIdFromSpeciesUrl(url: string): number {
 }
 
 export async function getPokemonDetails(id: string): Promise<Pokemon> {
-    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`,  {next: {revalidate: 3600}});
     if (!res.ok) throw new Error(`Fehler beim Abrufen des Pokémon mit der ID: ${id}`);
     const pokemonData = await res.json();
 

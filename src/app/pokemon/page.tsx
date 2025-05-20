@@ -1,5 +1,5 @@
 export default async function PokemonPage() {
-    const res = await fetch('https://pokeapi.co/api/v2/pokemon');
+    const res = await fetch('https://pokeapi.co/api/v2/pokemon', {next: {revalidate: 3600}});
     const data = await res.json();
 
     return (

@@ -47,7 +47,7 @@ export default function usePokemonFetcher() {
 
             if (selectedTypes.length > 0) {
                 for (const type of selectedTypes) {
-                    const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+                    const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`,  {next: {revalidate: 3600}});
                     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                     const data = await res.json();
                     fetchedPokemons = [
@@ -61,7 +61,7 @@ export default function usePokemonFetcher() {
 
                 setHasMore(false);
             } else {
-                const res = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`);
+                const res = await fetch(`https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}` ,{next: {revalidate: 3600}});
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 fetchedPokemons = data.results;
